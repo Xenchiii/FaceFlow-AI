@@ -1,0 +1,10 @@
+flask
+flask-cors
+python-dotenv
+numpy
+opencv-python-headless
+pandas
+scikit-learn
+scipy
+textblob
+vaderSentiment
