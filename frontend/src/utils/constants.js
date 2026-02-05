@@ -1,14 +1,14 @@
 // Color constants for the application
 export const COLORS = {
-  primary: '#F5F7FA',
-  secondary: '#7986C7',
-  accent: '#F73F52',
-  success: '#10b981',
-  warning: '#FFEA85',
-  error: '#ef4444',
-  info: '#5B6FA8',
-  dark: '#1f2937',
-  light: '#f3f4f6',
+  primary: '#F5F7FA',    // Background
+  secondary: '#7986C7',  // Academic / Purple
+  accent: '#F73F52',     // Sports / Red
+  success: '#10b981',    // Green
+  warning: '#FFEA85',    // Celebration / Yellow
+  error: '#ef4444',      // Red
+  info: '#5B6FA8',       // Blue / Anomalies
+  dark: '#1f2937',       // Slate 800
+  light: '#f3f4f6',      // Slate 100
   white: '#ffffff',
   black: '#000000',
   gray: {
@@ -24,37 +24,43 @@ export const COLORS = {
   },
 };
 
-// Initial events data
+// Initial events data (Synced with Dashboard)
 export const INITIAL_EVENTS = [
   {
     id: 1,
-    name: 'Tech Conference 2026',
-    date: '2026-02-15',
-    time: '9:00 AM - 5:00 PM',
-    venue: 'Main Convention Center',
-    capacity: 500,
-    registered: 342,
-    description: 'Annual technology conference featuring latest innovations',
+    name: 'CCS Week: AI Event',
+    date: 'January 17, 2026',
+    time: '8:00 AM - 7:00 PM',
+    venue: 'ICCT Gym',
+    capacity: 1500,
+    registered: 0,
+    category: 'Academic',
+    color: COLORS.secondary, // #7986C7
+    description: 'Annual CCS week focusing on Artificial Intelligence innovations.',
   },
   {
     id: 2,
-    name: 'Workshop: AI & Machine Learning',
-    date: '2026-02-20',
-    time: '2:00 PM - 6:00 PM',
-    venue: 'Training Room A',
-    capacity: 100,
-    registered: 78,
-    description: 'Hands-on workshop covering AI fundamentals',
+    name: 'ICCT Colleges Sport Festival',
+    date: 'June 20, 2026',
+    time: '6:00 AM - 3:00 PM',
+    venue: 'Marikina Sports Center',
+    capacity: 2000,
+    registered: 0,
+    category: 'Sports',
+    color: COLORS.accent, // #F73F52
+    description: 'Inter-campus sports competition and opening ceremony.',
   },
   {
     id: 3,
-    name: 'Networking Mixer',
-    date: '2026-02-25',
-    time: '6:00 PM - 9:00 PM',
-    venue: 'Rooftop Lounge',
-    capacity: 200,
-    registered: 156,
-    description: 'Professional networking event with industry leaders',
+    name: 'CCS College Day',
+    date: 'June 24, 2026',
+    time: '8:00 AM - 5:00 PM',
+    venue: 'ICCT Gym',
+    capacity: 1500,
+    registered: 0,
+    category: 'Celebration',
+    color: COLORS.warning, // #FFEA85
+    description: 'A day of celebration, booths, and student activities.',
   },
 ];
 
@@ -82,7 +88,8 @@ export const API_ENDPOINTS = {
 };
 
 // Other constants
-export const APP_NAME = 'FaceFlow AI';
+export const APP_NAME = 'SparrowFlow'; // Updated to match UI
+export const COMPANY_NAME = 'FaceFlow AI'; // For Footer Copyright
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 export const SUPPORTED_IMAGE_FORMATS = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 

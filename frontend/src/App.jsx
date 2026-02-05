@@ -1,187 +1,247 @@
-import { useState } from 'react';
-
-// Views
-import CameraView from './views/CameraView';
-import DashboardView from './views/DashboardView';
-import InsightsView from './views/InsightsView';
-import RecommendationsView from './views/RecommendationsView';
-
-// Common Components
-import QRCodeGenerator from './components/common/QRCodeGenerator';
-
-// Logic Hooks
+import { useState, useEffect } from 'react';
+import SparrowChatbot from './components/SparrowChatbot';
+import CameraView from './components/CameraView';
+import Dashboard from './components/Dashboard';
+import RecommendationsView from './components/Recommendations'; 
+import AIInsights from './components/AIInsights'; 
+import AuthLogin from './components/AuthLogin';
+import StudentRegistration from './components/StudentRegistration';
+import QRCodesTab from './components/common/QRCodesTab';
+import ImportTab from './components/common/ImportTab';
+import Navigation from './Layout/Navigation';
+import Footer from './Layout/Footer';
+import Header from './Layout/Header';
+import MobileNav from './components/MobileNav'; 
 import { useAttendance } from './hooks/useAttendance';
-import { useEvents } from './hooks/useEvents';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [darkMode, setDarkMode] = useState(false);
-  
-  const { attendanceCount, recentCheckIns, registerCheckIn } = useAttendance();
-  const { events, currentEvent, selectEvent } = useEvents();
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('isAuthenticated') === 'true';
+  });
 
-  const [showQRModal, setShowQRModal] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('activeTab') || 'dashboard');
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [qrSubTab, setQrSubTab] = useState('list');
   const [isScanning, setIsScanning] = useState(false);
-  const [showCamera, setShowCamera] = useState(true);
 
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.body.classList.toggle('dark-mode');
+  // --- CENTRAL DATA HOOK ---
+  const { 
+    attendanceCount, 
+    setAttendanceCount, 
+    recentCheckIns, 
+    setRecentCheckIns, 
+    registerCheckIn,
+    attendanceData 
+  } = useAttendance();
+
+  const [currentEvent, setCurrentEvent] = useState(() => {
+    const saved = localStorage.getItem('currentEvent');
+    try {
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) setIsSidebarExpanded(false);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => { localStorage.setItem('activeTab', activeTab); }, [activeTab]);
+  
+  useEffect(() => {
+    localStorage.setItem('darkMode', darkMode);
+    if (darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }, [darkMode]);
+
+  const handleLoginSuccess = (status) => {
+    setIsAuthenticated(status);
+    localStorage.setItem('isAuthenticated', 'true');
+    setShowAdminLogin(false);
   };
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-    { id: 'camera', label: 'Camera View', icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
-    { id: 'insights', label: 'Insights', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
-    { id: 'qrcodes', label: 'QR Codes', icon: 'M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z' },
-    { id: 'recommendations', label: 'Recommendations', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z' }
-  ];
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('isAuthenticated');
+    setShowAdminLogin(false);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.ctrlKey && event.altKey && event.key === '1') {
+        event.preventDefault();
+        setShowAdminLogin(true);
+      }
+      if (event.key === 'Escape' && showAdminLogin && !isAuthenticated) {
+        setShowAdminLogin(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAdminLogin, isAuthenticated]);
 
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
         return (
-          <DashboardView 
-            events={events}
-            currentEvent={currentEvent} 
-            onEventSelect={selectEvent} 
+          <Dashboard
+            darkMode={darkMode}
+            currentEvent={currentEvent}
+            setCurrentEvent={(e) => { setCurrentEvent(e); localStorage.setItem('currentEvent', JSON.stringify(e)); }}
             attendanceCount={attendanceCount}
-            onGenerateQR={() => setShowQRModal(true)}
+            attendanceData={attendanceData} 
+            onNavigateToCamera={() => setActiveTab('camera')}
           />
         );
       case 'camera':
         return (
-          <CameraView 
+          <CameraView
+            darkMode={darkMode}
             isScanning={isScanning}
             onToggleScan={() => setIsScanning(!isScanning)}
-            onQRScan={registerCheckIn}
+            onQRScan={registerCheckIn}  
+            onNewScan={registerCheckIn} 
             recentCheckIns={recentCheckIns}
-            showCamera={showCamera}
-            onToggleCamera={() => setShowCamera(!showCamera)}
+            currentEvent={currentEvent}
+            attendanceCount={attendanceCount}
           />
         );
       case 'insights':
-        return <InsightsView />;
+        return <AIInsights currentEvent={currentEvent} attendanceData={{ current: attendanceCount }} studentData={recentCheckIns} />;
       case 'qrcodes':
         return (
-          <div className="qr-generator">
-            <h3>QR Code Generator</h3>
-            <label htmlFor="qrInput">Enter Text or URL</label>
-            <input type="text" id="qrInput" placeholder="Enter text, URL, or data..." />
-            <button onClick={() => alert('Generate QR Code')}>Generate QR Code</button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ 
+              backgroundColor: darkMode ? '#1f2937' : 'white', 
+              borderRadius: '12px', 
+              padding: '6px', 
+              display: 'flex', 
+              border: '1px solid #e5e7eb' 
+            }}>
+              <button 
+                onClick={() => setQrSubTab('list')} 
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: qrSubTab === 'list' ? '#7986C7' : 'transparent', color: qrSubTab === 'list' ? 'white' : '#6b7280', fontWeight: '600', cursor: 'pointer' }}>
+                List
+              </button>
+              <button 
+                onClick={() => setQrSubTab('import')} 
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: qrSubTab === 'import' ? '#7986C7' : 'transparent', color: qrSubTab === 'import' ? 'white' : '#6b7280', fontWeight: '600', cursor: 'pointer' }}>
+                Import
+              </button>
+            </div>
+            {qrSubTab === 'list' ? (
+                <QRCodesTab 
+                    darkMode={darkMode} 
+                    refreshTrigger={attendanceCount} 
+                    // --- UPDATED LOGIC FOR NAVIGATION ---
+                    onNewScan={(newRecord) => {
+                        registerCheckIn(newRecord); // 1. Save Data
+                        setActiveTab('dashboard');  // 2. Switch to Dashboard immediately
+                    }}
+                />
+            ) : (
+                <ImportTab 
+                    darkMode={darkMode} 
+                    onImportComplete={() => setQrSubTab('list')} 
+                    onGoToQRCodes={() => setQrSubTab('list')} 
+                />
+            )}
           </div>
         );
       case 'recommendations':
-        return <RecommendationsView />;
+        return <RecommendationsView currentEvent={currentEvent} attendanceCount={attendanceCount} studentData={recentCheckIns} />;
       default:
-        return (
-          <div className="placeholder-content">
-            <div className="placeholder-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <h2>Section Under Development</h2>
-            <p>This feature is coming soon!</p>
-          </div>
-        );
+        return <div style={{ textAlign: 'center', padding: '50px' }}>Module Not Found</div>;
     }
   };
 
-  return (
-    <div className="app-container">
-      {/* SIDEBAR */}
-      <aside className="sidebar">
-        {/* Brand */}
-        <div className="brand">
-          <h1>FaceFlow AI</h1>
-          <p>Facial Recognition Platform</p>
+  if (isAuthenticated) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        minHeight: '100vh', 
+        backgroundColor: darkMode ? '#111827' : '#f3f4f6', 
+        overflow: 'hidden' 
+      }}>
+        
+        {!isMobile && (
+          <Navigation 
+            activeTab={activeTab} 
+            setActiveTab={setActiveTab} 
+            darkMode={darkMode} 
+            toggleDarkMode={() => setDarkMode(!darkMode)} 
+            isExpanded={isSidebarExpanded} 
+            setIsExpanded={setIsSidebarExpanded} 
+            onLogout={handleLogout} 
+          />
+        )}
+
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          marginLeft: isMobile ? '0' : (isSidebarExpanded ? '260px' : '80px'),
+          transition: 'margin-left 0.3s ease',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          
+          <Header 
+            darkMode={darkMode} 
+            setDarkMode={setDarkMode} 
+            isMobile={isMobile} 
+            onToggleSidebar={() => setIsSidebarExpanded(!isSidebarExpanded)} 
+            onLogout={handleLogout} 
+          />
+
+          <main style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: isMobile ? '16px' : '24px',
+            paddingBottom: isMobile ? '120px' : '24px', 
+            boxSizing: 'border-box'
+          }}>
+            {renderContent()}
+          </main>
+
+          {!isMobile && <Footer darkMode={darkMode} />}
+
+          {isMobile && (
+            <MobileNav 
+              activeTab={activeTab} 
+              setActiveTab={setActiveTab} 
+              darkMode={darkMode} 
+              toggleDarkMode={() => setDarkMode(!darkMode)}
+              onLogout={handleLogout}
+            />
+          )}
+
         </div>
 
-        {/* Navigation */}
-        <nav className="nav-menu">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
-            >
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
-              </svg>
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        {/* Footer */}
-        <div className="sidebar-footer">
-          <div className="dark-mode-toggle" onClick={toggleDarkMode}>
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {darkMode ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              )}
-            </svg>
-            <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
-          </div>
-
-          <div className="user-profile">
-            <div className="user-avatar">A</div>
-            <div className="user-info">
-              <h3>ADMIN</h3>
-              <p>ID: 00000</p>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* MAIN CONTENT */}
-      <div className="main-content">
-        {/* Header */}
-        <header className="header">
-          <div className="welcome">
-            <h2>Welcome, Admin!</h2>
-            <p>Here are the latest updates...</p>
-          </div>
-          <button className="logout-btn">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Logout
-          </button>
-        </header>
-
-        {/* Content Area */}
-        <main className="content-area">
-          {renderContent()}
-        </main>
-
-        {/* Footer */}
-        <footer className="footer">
-          <div>
-            <strong>Connect With Us</strong>
-            <div className="connect-icons">
-              <div className="connect-icon">F</div>
-              <div className="connect-icon">T</div>
-              <div className="connect-icon">I</div>
-              <div className="connect-icon">L</div>
-            </div>
-            <p style={{ marginTop: '20px' }}>© 2026 FaceFlow AI. All rights reserved.</p>
-          </div>
-        </footer>
-      </div>
-
-      {/* QR Modal */}
-      {showQRModal && activeTab !== 'qrcodes' && (
-        <QRCodeGenerator 
-          isOpen={showQRModal} 
-          onClose={() => setShowQRModal(false)} 
-          event={currentEvent} 
+        <SparrowChatbot 
+          darkMode={darkMode} 
+          onNavigate={(tab) => setActiveTab(tab)} 
         />
-      )}
-    </div>
-  );
+      </div>
+    );
+  }
+
+  if (showAdminLogin) return <AuthLogin onLogin={handleLoginSuccess} />;
+
+  return <StudentRegistration />;
 }

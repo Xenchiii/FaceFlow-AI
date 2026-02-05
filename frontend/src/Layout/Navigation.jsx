@@ -1,61 +1,474 @@
+import React from 'react';
+import { Home, Camera, BarChart3, QrCode, Star, Menu, X, Moon, Sun, LogOut } from 'lucide-react';
 
-export default function Navigation({ activeTab, setActiveTab }) {
+export default function Navigation({ 
+  activeTab, 
+  setActiveTab, 
+  darkMode, 
+  toggleDarkMode, 
+  isExpanded, 
+  setIsExpanded,
+  isMobile,
+  onLogout // <--- 1. Added this prop to receive the function from App.jsx
+}) {
+
   const navItems = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      icon: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-      )
-    },
-    {
-      id: 'camera',
-      label: 'Camera View',
-      icon: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-      )
-    },
-    {
-      id: 'insights',
-      label: 'Insights',
-      icon: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      )
-    },
-    {
-      id: 'qrcodes',
-      label: 'QR Codes',
-      icon: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-      )
-    },
-    {
-      id: 'recommendations',
-      label: 'Recommendations',
-      icon: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-      )
-    }
+    { id: 'dashboard', label: 'Dashboard', icon: Home },
+    { id: 'camera', label: 'Camera View', icon: Camera },
+    { id: 'insights', label: 'Insights', icon: BarChart3 },
+    { id: 'qrcodes', label: 'QR Codes', icon: QrCode },
+    { id: 'recommendations', label: 'Recommendations', icon: Star }
   ];
-
+    
+  // --- FIX 2: MOBILE LOGIC ---
+  // On Desktop: Expanded = 260px, Collapsed = 80px
+  // On Mobile:  Expanded = 260px, Collapsed = 0px (Hidden)
+  const sidebarWidth = isMobile 
+    ? (isExpanded ? '260px' : '0px') 
+    : (isExpanded ? '260px' : '80px');
+  
   return (
-    <nav className="space-y-1">
-      {navItems.map((item) => (
-        <button
-          key={item.id}
-          onClick={() => setActiveTab(item.id)}
-          className={`w-full flex items-center px-5 py-3 text-sm transition border-l-3 ${
-            activeTab === item.id
-              ? 'bg-white bg-opacity-10 text-white border-white'
-              : 'text-purple-200 hover:bg-white hover:bg-opacity-10 hover:text-white border-transparent'
-          }`}
+    <>
+      {/* Mobile Overlay: Darkens background when menu is open */}
+      {isMobile && isExpanded && (
+        <div 
+          onClick={() => setIsExpanded(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            zIndex: 999
+          }}
+        />
+      )}
+
+      <aside 
+        className="app-sidebar"
+        style={{
+          position: 'fixed', // Always fixed to stay on left
+          left: 0,
+          top: 0,
+          height: '100vh',
+          width: sidebarWidth,
+          backgroundColor: '#ffffff', 
+          borderRight: '1px solid #e5e7eb',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          boxSizing: 'border-box',
+          overflowX: 'hidden',
+          boxShadow: isExpanded ? '4px 0 24px rgba(0,0,0,0.05)' : 'none',
+          
+          // --- FIX 3: SLIDE OFF SCREEN ON MOBILE ---
+          // If mobile and closed -> Slide left (-100%)
+          // If desktop or open -> Stay at 0
+          transform: (isMobile && !isExpanded) ? 'translateX(-100%)' : 'translateX(0)',
+          visibility: (isMobile && !isExpanded) ? 'hidden' : 'visible'
+        }}
+      >
+        {/* Header & Hamburger */}
+        <div style={{
+          padding: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: isExpanded ? 'space-between' : 'center',
+          borderBottom: '1px solid',
+          borderColor: 'inherit',
+          minHeight: '80px',
+          boxSizing: 'border-box'
+        }}>
+          {isExpanded && (
+            <h1 className="nav-logo-text" style={{
+              fontSize: '20px',
+              fontWeight: '800',
+              color: '#1e293b',
+              margin: 0,
+              whiteSpace: 'nowrap',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              letterSpacing: '-0.5px'
+            }}>
+              SparrowFlow
+            </h1>
+          )}
+          
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              backgroundColor: isExpanded ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+              border: '1px solid',
+              borderColor: isExpanded ? 'transparent' : '#e2e8f0',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              flexShrink: 0,
+              padding: 0
+            }}
+            className="nav-toggle-btn"
+          >
+            {isExpanded ? 
+              <X size={18} className="nav-icon-color" /> : 
+              <Menu size={20} className="nav-icon-color" />
+            }
+          </button>
+        </div>
+
+        {/* Navigation Items */}
+        <nav style={{
+          flex: 1,
+          padding: '24px 12px',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          {navItems.map((item) => {
+            const IconComponent = item.icon;
+            const isActive = activeTab === item.id;
+            
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  if (isMobile && isExpanded) setIsExpanded(false);
+                }}
+                className={`nav-item ${isActive ? 'active' : ''}`}
+                style={{
+                  width: isExpanded ? '100%' : '50px',
+                  height: '50px',
+                  margin: isExpanded ? '0' : '0 auto', 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: isExpanded ? 'flex-start' : 'center',
+                  padding: isExpanded ? '0 16px' : '0',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  borderRadius: '14px',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  fontSize: '15px',
+                  fontWeight: isActive ? '600' : '500',
+                  position: 'relative',
+                  overflow: 'visible'
+                }}
+              >
+                {/* Active Indicator (Left Stripe) */}
+                {isActive && isExpanded && (
+                   <div style={{
+                     position: 'absolute',
+                     left: 0,
+                     top: '10px', 
+                     bottom: '10px',
+                     width: '4px',
+                     backgroundColor: '#3b82f6',
+                     borderTopRightRadius: '4px',
+                     borderBottomRightRadius: '4px'
+                   }} />
+                )}
+
+                {/* Collapsed Active Background Box */}
+                {isActive && !isExpanded && (
+                  <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderRadius: '14px'
+                  }} />
+                )}
+
+                <IconComponent 
+                  size={22} 
+                  className={isActive ? 'nav-icon-active' : ''}
+                  strokeWidth={isActive ? 2.5 : 2}
+                  style={{ zIndex: 1, flexShrink: 0 }}
+                />
+                
+                {isExpanded && (
+                  <span style={{
+                    whiteSpace: 'nowrap',
+                    marginLeft: '14px',
+                    zIndex: 1,
+                    opacity: 1
+                  }}>
+                    {item.label}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Bottom Actions Container */}
+        <div style={{
+          padding: isExpanded ? '0 16px' : '0',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          marginBottom: '10px',
+          alignItems: 'center',
+          width: '100%',
+          boxSizing: 'border-box'
+        }}>
+           
+           {/* Dark Mode Toggle */}
+           {isExpanded ? (
+             <div 
+               className="theme-toggle-container"
+               onClick={toggleDarkMode}
+               style={{
+                 width: '100%',
+                 padding: '6px',
+                 borderRadius: '99px',
+                 display: 'flex',
+                 alignItems: 'center',
+                 justifyContent: 'space-between',
+                 cursor: 'pointer',
+                 border: '1px solid',
+                 position: 'relative',
+                 height: '44px'
+               }}
+             >
+               <div style={{
+                 position: 'absolute',
+                 left: darkMode ? 'calc(100% - 50% - 4px)' : '4px',
+                 top: '4px',
+                 bottom: '4px',
+                 width: '50%',
+                 borderRadius: '99px',
+                 backgroundColor: darkMode ? '#1e293b' : '#ffffff',
+                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                 zIndex: 0
+               }} />
+
+               <div style={{
+                 flex: 1,
+                 display: 'flex',
+                 alignItems: 'center',
+                 justifyContent: 'center',
+                 zIndex: 1,
+                 gap: '6px',
+                 opacity: !darkMode ? 1 : 0.5,
+                 transition: 'opacity 0.2s'
+               }}>
+                 <Sun size={18} className={!darkMode ? 'sun-glow' : ''} color={!darkMode ? '#f59e0b' : '#94a3b8'} />
+                 <span style={{ fontSize: '13px', fontWeight: '600', color: !darkMode ? '#1e293b' : '#94a3b8' }}>Light</span>
+               </div>
+
+               <div style={{
+                 flex: 1,
+                 display: 'flex',
+                 alignItems: 'center',
+                 justifyContent: 'center',
+                 zIndex: 1,
+                 gap: '6px',
+                 opacity: darkMode ? 1 : 0.5,
+                 transition: 'opacity 0.2s'
+               }}>
+                 <Moon size={18} className={darkMode ? 'moon-glow' : ''} color={darkMode ? '#818cf8' : '#94a3b8'} />
+                 <span style={{ fontSize: '13px', fontWeight: '600', color: darkMode ? '#f8fafc' : '#94a3b8' }}>Dark</span>
+               </div>
+             </div>
+           ) : (
+             <button 
+                onClick={toggleDarkMode}
+                className="theme-btn-collapsed"
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  border: '1px solid',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s',
+                  padding: 0 
+                }}
+             >
+                {darkMode ? 
+                  <Moon size={22} className="moon-glow" color="#818cf8" /> : 
+                  <Sun size={22} className="sun-glow" color="#f59e0b" />
+                }
+             </button>
+           )}
+        </div>
+
+        {/* User Footer Info & Logout */}
+        <div 
+          className="nav-user-footer"
+          style={{
+            padding: '20px',
+            borderTop: '1px solid',
+            transition: 'background-color 0.2s',
+            display: 'flex',
+            justifyContent: 'center',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {item.icon}
-          </svg>
-          <span>{item.label}</span>
-        </button>
-      ))}
-    </nav>
+          {isExpanded ? (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px',
+                  fontWeight: '700',
+                  color: 'white',
+                  flexShrink: 0,
+                  boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)'
+                }}>
+                  A
+                </div>
+                <div style={{ overflow: 'hidden' }}>
+                  <h3 className="nav-user-name" style={{
+                    fontSize: '14px',
+                    fontWeight: '700',
+                    margin: 0,
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis'
+                  }}>
+                    ADMIN
+                  </h3>
+                  <p className="nav-user-id" style={{
+                    fontSize: '12px',
+                    margin: 0,
+                    whiteSpace: 'nowrap'
+                  }}>
+                    ID: 4817120
+                  </p>
+                </div>
+              </div>
+
+              {/* FIX 4: ATTACH LOGOUT FUNCTION HERE */}
+              <button 
+                className="mini-logout-btn"
+                onClick={onLogout} 
+                style={{
+                  padding: '8px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  color: '#94a3af',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                title="Log Out"
+              >
+                <LogOut size={20} />
+              </button>
+            </div>
+          ) : (
+              <div 
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+                onClick={onLogout} // FIX 5: ATTACH LOGOUT TO COLLAPSED ICON TOO
+                title="Log Out"
+              >
+                A
+              </div>
+          )}
+        </div>
+      </aside>
+
+      <style>{`
+        /* ... (Keep existing animations: glow-sun, glow-moon) ... */
+        @keyframes glow-sun {
+          0% { filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.5)); transform: rotate(0deg); }
+          50% { filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8)); transform: rotate(180deg); }
+          100% { filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.5)); transform: rotate(360deg); }
+        }
+
+        @keyframes glow-moon {
+          0% { filter: drop-shadow(0 0 2px rgba(129, 140, 248, 0.5)); transform: scale(1); }
+          50% { filter: drop-shadow(0 0 8px rgba(129, 140, 248, 0.8)); transform: scale(1.1); }
+          100% { filter: drop-shadow(0 0 2px rgba(129, 140, 248, 0.5)); transform: scale(1); }
+        }
+
+        .sun-glow { animation: glow-sun 3s infinite linear; }
+        .moon-glow { animation: glow-moon 2s infinite ease-in-out; }
+
+        .nav-icon-color { color: #64748b; }
+        .nav-toggle-btn:hover { background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; }
+        .nav-toggle-btn:hover .nav-icon-color { color: #3b82f6; }
+        
+        .nav-item:hover { background-color: #f8fafc !important; color: #3b82f6 !important; }
+        .nav-item.active { color: #2563eb !important; }
+        
+        .theme-toggle-container { background-color: #f1f5f9; border-color: #e2e8f0; }
+        .theme-btn-collapsed { background-color: #f8fafc; border-color: #e2e8f0; }
+        .theme-btn-collapsed:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
+
+        .nav-user-footer { border-color: #e5e7eb; background-color: transparent; }
+        .nav-user-name { color: #1e293b; }
+        .nav-user-id { color: #64748b; }
+
+        .mini-logout-btn:hover { background-color: #fef2f2 !important; color: #ef4444 !important; transform: scale(1.1); }
+
+        /* --- DARK MODE OVERRIDES --- */
+        body.dark-mode .app-sidebar {
+          background-color: #0f172a !important; 
+          border-right-color: #1e293b !important;
+        }
+
+        body.dark-mode .nav-logo-text {
+          background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%) !important;
+          -webkit-background-clip: text !important;
+        }
+
+        body.dark-mode .nav-toggle-btn {
+          border-color: #334155 !important;
+        }
+        body.dark-mode .nav-toggle-btn:hover {
+          background-color: #1e293b !important;
+        }
+        body.dark-mode .nav-icon-color { color: #94a3b8; }
+
+        body.dark-mode .nav-item { color: #94a3b8 !important; }
+        body.dark-mode .nav-item:hover { background-color: #1e293b !important; color: #60a5fa !important; }
+        body.dark-mode .nav-item.active { color: #60a5fa !important; }
+
+        body.dark-mode .theme-toggle-container { background-color: #020617 !important; border-color: #1e293b !important; }
+        body.dark-mode .theme-btn-collapsed { background-color: #1e293b !important; border-color: #334155 !important; }
+        body.dark-mode .theme-btn-collapsed:hover { background-color: #334155 !important; border-color: #475569 !important; }
+
+        body.dark-mode .nav-user-footer { border-color: #1e293b !important; }
+        body.dark-mode .nav-user-name { color: #f8fafc !important; }
+        body.dark-mode .nav-user-id { color: #94a3b8 !important; }
+        
+        body.dark-mode .mini-logout-btn:hover { background-color: #450a0a !important; color: #f87171 !important; }
+      `}</style>
+    </>
   );
 }

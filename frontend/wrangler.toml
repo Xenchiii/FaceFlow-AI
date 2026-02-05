@@ -1,0 +1,12 @@
+name = "sparrowflow"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "dist"
+
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sparrow-db"
+database_id = "0e354cfb-c0d0-4de3-8237-eeb2b384cd81"
+
+[ai]
+binding = "AI"
